@@ -1,0 +1,5 @@
+{
+  "nativeDependencies": {
+    "@hmscore/react-native-hms-scan": "^2.12.0-301"
+  }
+}
