@@ -30,7 +30,7 @@ const callReactNativeMethod = (method, params, callback) => {
 	window.ReactNativeWebView.postMessage(JSON.stringify(message));
 	// 保存请求的回调函数
 	window.rpcCallbacks = window.rpcCallbacks || {};
-	window.rpcCallbacks[requestId] = callback;
+	window.rpcCallbacks[requestId] = e => callback(requestId, e);
 };
 // END EXTRA CODE
 
@@ -40,10 +40,14 @@ const callReactNativeMethod = (method, params, callback) => {
 export async function JavaScript_action() {
 	// BEGIN USER CODE
 	return new Promise((resolve, reject) => {
-		setTimeout(() => { reject('timeout') }, 3000);
+		const h = setTimeout(() => { reject('timeout') }, 3000);
 
-		callReactNativeMethod('callReactNativeMethod', null, (e) => {
-			resolve(e);
+		callReactNativeMethod('callReactNativeMethod', null, (requestId, e) => {
+			clearTimeout(h);
+			delete window.rpcCallbacks[requestId];
+			// alert(requestId)
+			// alert(JSON.stringify(e))
+			resolve(e.result);
 		});
 	});
 	// END USER CODE
