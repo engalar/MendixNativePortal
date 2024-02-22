@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "@hmscore/react-native-hms-scan": "^2.12.0-301"
+    "@hmscore/react-native-hms-scan": "2.12.0-301"
   }
 }
