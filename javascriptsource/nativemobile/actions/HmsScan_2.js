@@ -15,14 +15,9 @@ import ScanPlugin from "@hmscore/react-native-hms-scan";
 /**
  * @returns {Promise.<void>}
  */
-export async function HmsScan() {
+export async function HmsScan_2() {
 	// BEGIN USER CODE
-	ScanPlugin.Utils.startDefaultView({
-		scanType: ScanPlugin.ScanType.All,
-		additionalScanTypes: [],
-		viewType: 1,
-		errorCheck: false
-	}).then((res) =>
+	ScanPlugin.MultiProcessor.startMultiProcessorCamera({scanType: ScanPlugin.ScanType.All,scanMode:ScanPlugin.ScanMode.Async}).then((res) =>
 		alert(JSON.stringify(res))
 	)
 	// END USER CODE
