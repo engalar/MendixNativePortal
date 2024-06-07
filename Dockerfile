@@ -9,6 +9,7 @@ FROM mcr.microsoft.com/devcontainers/base:jammy
 ENV http_proxy=http://host.docker.internal:29758
 
 # 设置清华镜像作为软件包源
+
 RUN sed -i 's/archive.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list
 
 # 更新apt并安装必要的包
