@@ -8,6 +8,9 @@ FROM mcr.microsoft.com/devcontainers/base:jammy
 # 设置环境变量
 ENV http_proxy=http://host.docker.internal:29758
 
+# 设置清华镜像作为软件包源
+RUN sed -i 's/archive.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list
+
 # 更新apt并安装必要的包
 RUN apt-get update && \
     apt-get install -y mono-complete openjdk-11-jdk wget && \
@@ -23,7 +26,7 @@ RUN wget https://cdn.mendix.com/runtime/mxbuild-$MX_VER.tar.gz && \
 # RUN mono /opt/mxbuild-$MX_VER/modeler/mxbuild.exe --target=deploy --native-packager --loose-version-check --java-home="/usr/lib/jvm/java-11-openjdk-amd64/" --java-exe-path="/usr/lib/jvm/java-11-openjdk-amd64/bin/java" $MPR_FILE
 
 # 克隆native-template仓库
-RUN git clone --depth 1 --branch $TPL_VERSION https://github.com/mendix/native-template.git /workspaces/native-template
+# RUN git clone --depth 1 --branch $TPL_VERSION https://github.com/mendix/native-template.git /workspaces/native-template
 # RUN git clone --depth 1 --branch $TPL_VERSION https://github.com/mendix/native-template.git /workspaces/native-template && \
 #     cp -R deployment/native/bundle/android/* /workspaces/native-template/android/app/src/main
 
