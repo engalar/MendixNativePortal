@@ -1,9 +1,8 @@
 name: Mendix App Build For Native
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  push:    
+    branches: [ "main" ]
 env:
   PRO_VERSION: 9.24.12.20495
   TPL_VERSION: v7.0.13
