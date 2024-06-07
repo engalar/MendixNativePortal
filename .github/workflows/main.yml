@@ -1,0 +1,76 @@
+name: Mendix App Build For Native
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+env:
+  PRO_VERSION: 9.24.12.20495
+  TPL_VERSION: v7.0.13
+  MPR_FILE: NativePortal.mpr
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+        
+    - uses: awalsh128/cache-apt-pkgs-action@latest
+      name: Install Mono and OpenJDK 11
+      with:
+        packages: mono-complete openjdk-11-jdk
+        version: 1.0
+
+    - name: Cache Mendix mxbuild
+      uses: actions/cache@v2
+      with:
+        path: mxbuild-${{ env.PRO_VERSION }}
+        key: mxbuild-${{ env.PRO_VERSION }}
+
+    - name: Download and extract mxbuild
+      run: |
+        if [ ! -d "mxbuild-${{ env.PRO_VERSION }}" ]; then
+          wget https://cdn.mendix.com/runtime/mxbuild-${{ env.PRO_VERSION }}.tar.gz
+          mkdir mxbuild-${{ env.PRO_VERSION }}
+          tar -xzf mxbuild-${{ env.PRO_VERSION }}.tar.gz -C mxbuild-${{ env.PRO_VERSION }}
+        fi
+
+    - name: Build Mendix project For Native
+      run: |
+        mono mxbuild-${{ env.PRO_VERSION }}/modeler/mxbuild.exe --target=deploy --native-packager --loose-version-check --java-home="/usr/lib/jvm/java-11-openjdk-amd64/" --java-exe-path="/usr/lib/jvm/java-11-openjdk-amd64/bin/java" ${{ env.MPR_FILE }}
+
+    - name: Clone Native Template And Copy Bundle File
+      run: |
+        git clone --depth 1 --branch ${{ env.TPL_VERSION }} https://github.com/mendix/native-template.git
+        cp -R deployment/native/bundle/android/* native-template/android/app/src/main
+    
+    - name: Install dependencies
+      working-directory: native-template
+      run: npm i
+      
+    - name: Generate temporary keystore
+      working-directory: native-template
+      run: keytool -genkey -v -keystore android/app/temp-release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias temp -storepass mypass -keypass mypass -dname "CN=Temp, OU=Temp, O=Temp, L=Temp, S=Temp, C=Temp"
+      
+    - name: Set debug signingConfig to use temporary keystore
+      working-directory: native-template
+      run: |
+        sed -i "/android {/a\ \   signingConfigs {\n        temp {\n            storeFile file('temp-release-key.jks')\n            storePassword 'mypass'\n            keyAlias 'temp'\n            keyPassword 'mypass'\n        }\n    }" android/app/build.gradle
+        sed -i '/buildTypes {/a\ \ \ \ debug {\n        signingConfig signingConfigs.temp\n    }' android/app/build.gradle
+      
+    - name: Build Android app
+      working-directory: native-template/android
+      run: ./gradlew assembleDebug
+
+    - name: "Release APK Files"
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: marvinpinto/action-automatic-releases@v1.2.1
+      with:
+         repo_token: "${{ secrets.GITHUB_TOKEN }}"
+         #automatic_release_tag: "${{ github.ref }}"
+         prerelease: false
+         title: "Mendix Android Apk"
+         files: |
+              native-template/android/app/build/outputs/apk/dev/debug/*.apk
